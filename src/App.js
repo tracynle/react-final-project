@@ -58,14 +58,6 @@ class App extends Component {
         .catch(error => console.error(error));
   }
 
-//   getNewSlugFromTitle = title =>
-//     encodeURIComponent(
-//       title
-//         .toLowerCase()
-//         .split(" ")
-//         .join("-")
-//     );
-
   addNewPost = post => {
     this.props.appService.savePost(post);
     this.displayMessage("saved");
