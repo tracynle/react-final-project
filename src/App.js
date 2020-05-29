@@ -5,7 +5,9 @@ import {
   Route,
   Redirect
 } from "react-router-dom";
+import firebase from "./firebase";
 import SimpleStorage from "react-simple-storage";
+
 import Header from "./components/Header";
 import Message from "./components/Message";
 import Posts from "./components/Posts";
@@ -22,68 +24,86 @@ class App extends Component {
     posts: [],
     message: null
   };
-
-  // Will take the component you want to load if the user is authenticated
-  renderAuthRoute = (Component, props) => (
-    !this.state.isAuthenticated ? (
-        <Component {...props} />
-    ): <Redirect to='/' />
-  )
-
-  displayMessage = type => {
-      this.setState({ message: type });
-      setTimeout(() => {
-          this.setState({ message: null });
-      }, 1600);
-  };
-
   onLogin = (email, password) => {
     console.log(email, password);
-    this.props.appService
-      .login(email, password)
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
       .then(user => {
-        this.setState({
-          isAuthenticated: true
-        });
+          console.log("aaaaa",this);
+        this.setState({ isAuthenticated: true });
       })
       .catch(error => console.error(error));
   };
-
   onLogout = () => {
-      this.props.appService
-        .logout()
-        .then(() => {
-            this.setState({ isAuthenticated: false });
-        })
-        .catch(error => console.error(error));
-  }
-
+    firebase
+      .auth()
+      .signOut()
+      .then(() => {
+        this.setState({ isAuthenticated: false });
+      })
+      .catch(error => console.error(error));
+  };
+  getNewSlugFromTitle = title =>
+    encodeURIComponent(
+      title
+        .toLowerCase()
+        .split(" ")
+        .join("-")
+    );
   addNewPost = post => {
-    this.props.appService.savePost(post);
-    this.displayMessage("saved");
+    const postsRef = firebase.database().ref("posts");
+    post.slug = this.getNewSlugFromTitle(post.title);
+    delete post.key;
+    postsRef.push(post);
+    this.setState({
+      message: "saved"
+    });
+    setTimeout(() => {
+      this.setState({ message: null });
+    }, 1600);
   };
-
   updatePost = post => {
-    this.props.appService.updatePost(post);
-    this.displayMessage("updated");
+    const postRef = firebase.database().ref("posts/" + post.key);
+    postRef.update({
+      slug: this.getNewSlugFromTitle(post.title),
+      title: post.title,
+      content: post.content
+    });
+    this.setState({ message: "updated" });
+    setTimeout(() => {
+      this.setState({ message: null });
+    }, 1600);
   };
-
   deletePost = post => {
     if (window.confirm("Delete this post?")) {
-      this.props.appService.deletePost(post);
-      this.displayMessage("deleted");
+      const postRef = firebase.database().ref("posts/" + post.key);
+      postRef.remove();
+      this.setState({ message: "deleted" });
+      setTimeout(() => {
+        this.setState({ message: null });
+      }, 1600);
     }
   };
-
   componentDidMount() {
-    this.props.appService.subscribeToPosts(posts =>
-      this.setState({
-        posts
-      })
-    );
+    const postsRef = firebase.database().ref("posts");
+    postsRef.on("value", snapshot => {
+      const posts = snapshot.val();
+      const newStatePosts = [];
+      for (let post in posts) {
+        newStatePosts.push({
+          key: post,
+          slug: posts[post].slug,
+          title: posts[post].title,
+          content: posts[post].content
+        });
+      }
+      this.setState({ posts: newStatePosts });
+    });
   }
-
   render() {
+    console.log('render appsssss');
+    console.log(this.state.isAuthenticated);
     return (
       <Router>
         <div className="App">
@@ -118,29 +138,29 @@ class App extends Component {
                 }
               }}
             />
-            {/* redirects user if they are already logged in*/}
             <Route
               exact
               path="/login"
               render={() =>
-                this.renderAuthRoute(Login, {
-                    onLogin: this.onLogin
-                })
+                !this.state.isAuthenticated ? (
+                  <Login onLogin={this.onLogin} />
+                ) : (
+                  <Redirect to="/" />
+                )
               }
             />
             <Route
               exact
               path="/new"
               render={() =>
-                this.renderAuthRoute(PostForm, {
-                    addNewPost: this.addNewPost,
-                    post: {
-                        key: null,
-                        slug: '',
-                        title: '',
-                        content: ''
-                    }
-                })
+                this.state.isAuthenticated ? (
+                  <PostForm
+                    addNewPost={this.addNewPost}
+                    post={{ key: null, slug: "", title: "", content: "" }}
+                  />
+                ) : (
+                  <Redirect to="/" />
+                )
               }
             />
             <Route
@@ -149,12 +169,10 @@ class App extends Component {
                 const post = this.state.posts.find(
                   post => post.slug === props.match.params.postSlug
                 );
-                if (post) {
-                  return this.renderAuthRoute(PostForm, {
-                      updatePost: this.updatePost, post
-                  });
+                if (post && this.state.isAuthenticated) {
+                  return <PostForm updatePost={this.updatePost} post={post} />;
                 } else {
-                    return <Redirect to='/' />
+                  return <Redirect to="/" />;
                 }
               }}
             />

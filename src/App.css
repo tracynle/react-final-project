@@ -28,7 +28,8 @@
   padding: 1rem;
 }
 
-  .App-header a {
+  .App-header a,
+  .App .App-header button.linkLike {
     color:#fff;
     font-weight: normal;
   }
@@ -119,24 +120,13 @@
   }
 
 .App button.linkLike {
+  background:inherit;
   border: none;
-  font-size: inherit;
   color: #26738D;
+  font-size: inherit;
   text-decoration: underline;  
 }
 
-  .App button.linkLike:hover {
-     cursor: pointer;
-  }
-
-button.linkLik {
-    background: inherit;
-    border: none;
-    color: #26738D;
-    font-size: inherit;
-    text-decoration: none;
-}
-
-button.linkLike:hover {
+.App button.linkLike:hover {
     cursor: pointer;
 }
