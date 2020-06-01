@@ -34,7 +34,6 @@ class App extends Component {
       .auth()
       .signInWithEmailAndPassword(email, password)
       .then(user => {
-        console.log("aaaaa", this);
         this.setState({ 
             isAuthenticated: true,
             message: "loggedIn", 
@@ -71,7 +70,6 @@ class App extends Component {
     postsRef.on("value", snapshot => {
         const posts = snapshot.val();
         const newStatePosts = [];
-        console.log(posts);
         for (let key in posts) {
         newStatePosts.push({
             key: key,
@@ -99,7 +97,6 @@ class App extends Component {
     post.email = this.state.email;
     delete post.key;
     postsRef.push(post);
-    console.log("BBBBB");
 
     this.setState({
       message: "saved"
@@ -134,8 +131,6 @@ class App extends Component {
   };
 
   render() {
-    console.log("render appsssss");
-    console.log(this.state.isAuthenticated);
     return (
       <div id="main-wrapper">
         <div className="page-wrapper ">
