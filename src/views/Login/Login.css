@@ -1,0 +1,8 @@
+.form-container {
+    display: flex;
+    justify-content: center;
+}
+label {
+    color: black;
+}
+

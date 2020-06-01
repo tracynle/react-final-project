@@ -8,13 +8,15 @@ import {
 import firebase from "./firebase";
 import SimpleStorage from "react-simple-storage";
 
-import Header from "./components/Header";
-import Message from "./components/Message";
-import Posts from "./components/Posts";
-import Post from "./components/Post";
-import PostForm from "./components/PostForm";
-import Login from "./components/Login";
-import NotFound from "./components/NotFound";
+import NavBar from "./components/navbar/navbar";
+
+import Footer from "./components/footer/footer";
+import Message from "./components/message/message";
+import Posts from "./components/posts/posts";
+import Post from "./components/post/post";
+import PostForm from "./components/postForm/postForm";
+import Login from "./views/Login/Login";
+import NotFound from "./views/NotFound/NotFound";
 
 import "./App.css";
 
@@ -30,8 +32,14 @@ class App extends Component {
       .auth()
       .signInWithEmailAndPassword(email, password)
       .then(user => {
-          console.log("aaaaa",this);
-        this.setState({ isAuthenticated: true });
+        console.log("aaaaa", this);
+        this.setState({ 
+            isAuthenticated: true,
+            message: "loggedIn" 
+        });
+        setTimeout(() => {
+            this.setState({ message: null });
+        }, 1600);
       })
       .catch(error => console.error(error));
   };
@@ -40,7 +48,13 @@ class App extends Component {
       .auth()
       .signOut()
       .then(() => {
-        this.setState({ isAuthenticated: false });
+        this.setState({ 
+            isAuthenticated: false,
+            message: "loggedOut"
+        });
+        setTimeout(() => {
+            this.setState({ message: null });
+        }, 1600);
       })
       .catch(error => console.error(error));
   };
@@ -102,84 +116,93 @@ class App extends Component {
     });
   }
   render() {
-    console.log('render appsssss');
+    console.log("render appsssss");
     console.log(this.state.isAuthenticated);
     return (
-      <Router>
-        <div className="App">
-          <SimpleStorage parent={this} />
-          <Header
-            isAuthenticated={this.state.isAuthenticated}
-            onLogout={this.onLogout}
-          />
-          {this.state.message && <Message type={this.state.message} />}
-          <Switch>
-            <Route
-              exact
-              path="/"
-              render={() => (
-                <Posts
+      <div id="main-wrapper">
+        <div className="page-wrapper ">
+          <div className="container-fluid">
+            <Router>
+              <div className="App">
+                <SimpleStorage parent={this} />
+                <NavBar
                   isAuthenticated={this.state.isAuthenticated}
-                  posts={this.state.posts}
-                  deletePost={this.deletePost}
+                  onLogout={this.onLogout}
                 />
-              )}
-            />
-            <Route
-              path="/post/:postSlug"
-              render={props => {
-                const post = this.state.posts.find(
-                  post => post.slug === props.match.params.postSlug
-                );
-                if (post) {
-                  return <Post post={post} />;
-                } else {
-                  return <Redirect to="/" />;
-                }
-              }}
-            />
-            <Route
-              exact
-              path="/login"
-              render={() =>
-                !this.state.isAuthenticated ? (
-                  <Login onLogin={this.onLogin} />
-                ) : (
-                  <Redirect to="/" />
-                )
-              }
-            />
-            <Route
-              exact
-              path="/new"
-              render={() =>
-                this.state.isAuthenticated ? (
-                  <PostForm
-                    addNewPost={this.addNewPost}
-                    post={{ key: null, slug: "", title: "", content: "" }}
+                {this.state.message && <Message type={this.state.message} />}
+                <Switch>
+                  <Route
+                    exact
+                    path="/"
+                    render={() => (
+                      <Posts
+                        isAuthenticated={this.state.isAuthenticated}
+                        posts={this.state.posts}
+                        deletePost={this.deletePost}
+                      />
+                    )}
                   />
-                ) : (
-                  <Redirect to="/" />
-                )
-              }
-            />
-            <Route
-              path="/edit/:postSlug"
-              render={props => {
-                const post = this.state.posts.find(
-                  post => post.slug === props.match.params.postSlug
-                );
-                if (post && this.state.isAuthenticated) {
-                  return <PostForm updatePost={this.updatePost} post={post} />;
-                } else {
-                  return <Redirect to="/" />;
-                }
-              }}
-            />
-            <Route component={NotFound} />
-          </Switch>
+                  <Route
+                    path="/post/:postSlug"
+                    render={props => {
+                      const post = this.state.posts.find(
+                        post => post.slug === props.match.params.postSlug
+                      );
+                      if (post) {
+                        return <Post post={post} />;
+                      } else {
+                        return <Redirect to="/" />;
+                      }
+                    }}
+                  />
+                  <Route
+                    exact
+                    path="/login"
+                    render={() =>
+                      !this.state.isAuthenticated ? (
+                        <Login onLogin={this.onLogin} />
+                      ) : (
+                        <Redirect to="/" />
+                      )
+                    }
+                  />
+                  <Route
+                    exact
+                    path="/new"
+                    render={() =>
+                      this.state.isAuthenticated ? (
+                        <PostForm
+                          addNewPost={this.addNewPost}
+                          post={{ key: null, slug: "", title: "", content: "" }}
+                        />
+                      ) : (
+                        <Redirect to="/" />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/edit/:postSlug"
+                    render={props => {
+                      const post = this.state.posts.find(
+                        post => post.slug === props.match.params.postSlug
+                      );
+                      if (post && this.state.isAuthenticated) {
+                        return (
+                          <PostForm updatePost={this.updatePost} post={post} />
+                        );
+                      } else {
+                        return <Redirect to="/" />;
+                      }
+                    }}
+                  />
+                  <Route component={NotFound} />
+                </Switch>
+                <Footer />
+              </div>
+            </Router>
+          </div>
         </div>
-      </Router>
+      </div>
     );
   }
 }
