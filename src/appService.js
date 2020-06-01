@@ -2,7 +2,9 @@ import firebase from "./firebase";
 
 export default new class AppService {
   login(email, password) {
-    return firebase.auth().signInWithEmailAndPassword(email, password);
+    return firebase
+    .auth()
+    .signInWithEmailAndPassword(email, password);
   }
 
   logout() {
@@ -37,13 +39,15 @@ export default new class AppService {
     );
   };
 
-  savePost = post => {
+  savePost = (post, email) => {
+      console.log("AAAA");
     return firebase
       .database()
       .ref("posts")
       .push({
         ...post,
-        slug: this.getNewSlugFromTitle(post.title)
+        slug: this.getNewSlugFromTitle(post.title),
+        email: email
       });
   };
 

@@ -24,8 +24,10 @@ class App extends Component {
   state = {
     isAuthenticated: false,
     posts: [],
-    message: null
+    message: null,
+    email: ""
   };
+
   onLogin = (email, password) => {
     console.log(email, password);
     firebase
@@ -35,14 +37,17 @@ class App extends Component {
         console.log("aaaaa", this);
         this.setState({ 
             isAuthenticated: true,
-            message: "loggedIn" 
+            message: "loggedIn", 
+            email: email 
         });
+        this.getPosts(email);
         setTimeout(() => {
             this.setState({ message: null });
         }, 1600);
       })
       .catch(error => console.error(error));
   };
+
   onLogout = () => {
     firebase
       .auth()
@@ -50,7 +55,8 @@ class App extends Component {
       .then(() => {
         this.setState({ 
             isAuthenticated: false,
-            message: "loggedOut"
+            message: "loggedOut",
+            email: ""
         });
         setTimeout(() => {
             this.setState({ message: null });
@@ -58,6 +64,27 @@ class App extends Component {
       })
       .catch(error => console.error(error));
   };
+
+  getPosts = (email) => {
+    console.log(this.state.email);
+    const postsRef = firebase.database().ref("posts").orderByChild("email").equalTo(email);
+    postsRef.on("value", snapshot => {
+        const posts = snapshot.val();
+        const newStatePosts = [];
+        console.log(posts);
+        for (let key in posts) {
+        newStatePosts.push({
+            key: key,
+            slug: posts[key].slug,
+            title: posts[key].title,
+            content: posts[key].content,
+            email: posts[key].email
+        });
+        }
+        this.setState({ posts: newStatePosts });
+    });
+  }
+
   getNewSlugFromTitle = title =>
     encodeURIComponent(
       title
@@ -65,11 +92,15 @@ class App extends Component {
         .split(" ")
         .join("-")
     );
+
   addNewPost = post => {
     const postsRef = firebase.database().ref("posts");
     post.slug = this.getNewSlugFromTitle(post.title);
+    post.email = this.state.email;
     delete post.key;
     postsRef.push(post);
+    console.log("BBBBB");
+
     this.setState({
       message: "saved"
     });
@@ -77,6 +108,7 @@ class App extends Component {
       this.setState({ message: null });
     }, 1600);
   };
+
   updatePost = post => {
     const postRef = firebase.database().ref("posts/" + post.key);
     postRef.update({
@@ -89,6 +121,7 @@ class App extends Component {
       this.setState({ message: null });
     }, 1600);
   };
+
   deletePost = post => {
     if (window.confirm("Delete this post?")) {
       const postRef = firebase.database().ref("posts/" + post.key);
@@ -99,22 +132,7 @@ class App extends Component {
       }, 1600);
     }
   };
-  componentDidMount() {
-    const postsRef = firebase.database().ref("posts");
-    postsRef.on("value", snapshot => {
-      const posts = snapshot.val();
-      const newStatePosts = [];
-      for (let post in posts) {
-        newStatePosts.push({
-          key: post,
-          slug: posts[post].slug,
-          title: posts[post].title,
-          content: posts[post].content
-        });
-      }
-      this.setState({ posts: newStatePosts });
-    });
-  }
+
   render() {
     console.log("render appsssss");
     console.log(this.state.isAuthenticated);
