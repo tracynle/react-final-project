@@ -47,7 +47,7 @@ export default class Login extends Component {
                       type="text"
                       className="form-control"
                       id="name"
-                      placeholder="Enter Username"
+                      placeholder="Enter Email"
                       onChange={e => this.setState({ email: e.target.value })}
                     />
                   </FormGroup>
@@ -59,7 +59,7 @@ export default class Login extends Component {
                       type="password"
                       className="form-control"
                       id="email"
-                      placeholder="Enter email"
+                      placeholder="Enter Password"
                       onChange={e =>
                         this.setState({ password: e.target.value })
                       }
